@@ -34,6 +34,11 @@
       "path": "commands/scaffold.md"
     },
     {
+      "name": "es-scaffold",
+      "description": "Generate an Event Sourcing scaffold using domain aggregates and fold→decide→evolve with Functional Core / Imperative Shell architecture",
+      "path": "commands/es-scaffold.md"
+    },
+    {
       "name": "setup",
       "description": "Install rust-assembly-line hooks and quality gates into the current project",
       "path": "commands/setup.md"
@@ -51,6 +56,10 @@
     {
       "name": "planning:flow-extractor",
       "path": "agents/planning/flow-extractor.md"
+    },
+    {
+      "name": "planning:es-aggregate-architect",
+      "path": "agents/planning/es-aggregate-architect.md"
     },
     {
       "name": "planning:story-generator",
@@ -139,6 +148,10 @@
     {
       "name": "code-review:api-design-reviewer",
       "path": "agents/code-review/api-design-reviewer.md"
+    },
+    {
+      "name": "code-review:es-invariant-reviewer",
+      "path": "agents/code-review/es-invariant-reviewer.md"
     },
     {
       "name": "compound:rust-pattern-documenter",

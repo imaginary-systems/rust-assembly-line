@@ -12,6 +12,7 @@ A Rust-focused software assembly line that orchestrates multi-agent workflows to
 | `/ral:review` | Run multi-agent code review on a branch or PR |
 | `/ral:compound` | Capture learnings and update project documentation |
 | `/ral:scaffold` | Generate CRUD scaffold across Rust crate layers |
+| `/ral:es-scaffold` | Generate an Event Sourcing scaffold with domain aggregate, fold→decide→evolve, and FCIS architecture |
 | `/ral:setup` | Install hooks and quality gates |
 
 ## Rust Quality Standards
@@ -105,9 +106,76 @@ proposed → accepted → deprecated
                     ↘ superseded by ADR-NNNN
 ```
 
+## Event Sourcing: Fold → Decide → Evolve
+
+The `es-scaffold` command generates a domain aggregate following the **Functional Core / Imperative Shell (FCIS)** pattern with an explicit **Fold → Decide → Evolve** workflow. The boundary between core and shell is enforced at the Cargo crate level.
+
+### The Workflow
+
+```
+past events ──► fold(events) ──────────────────► State
+                                                    │
+command ─────────────────────────────────────► decide(state, cmd)
+                                                    │
+                                       Ok(Vec<Event>) | Err(DomainError)
+
+state + event ──► evolve(state, event) ──────────► State'
+```
+
+| Function | Type | Description |
+|----------|------|-------------|
+| `fold` | `&[Event] → State` | Reconstruct current state by replaying all past events through `evolve` |
+| `decide` | `(&State, Command) → Result<Vec<Event>, Error>` | Pure business logic: given state + intent, return what happened or why not |
+| `evolve` | `(State, &Event) → State` | Pure state transition: unconditionally apply one event to produce the next state |
+
+### FCIS Crate Boundary
+
+```
+┌─────────────────────────────────────┐
+│         FUNCTIONAL CORE             │  Zero I/O. Zero async. Pure functions.
+│  <prefix>-types   (contracts)       │  Freely unit-testable with no infrastructure.
+│  <prefix>-domain  (decide+evolve)   │  All business logic lives here.
+└─────────────────────────────────────┘
+             ↑ depended upon by ↑
+┌─────────────────────────────────────┐
+│         IMPERATIVE SHELL            │  I/O allowed. Async allowed.
+│  <prefix>-store   (event store)     │  Connects the domain to the outside world.
+│  <prefix>-service (cmd handler)     │  Orchestrates: load → fold → decide → append
+│  <prefix>-api     (HTTP/gRPC)       │  Never contains business logic.
+└─────────────────────────────────────┘
+```
+
+**Non-negotiable FCIS rules** (enforced by `es-invariant-reviewer`):
+- `*-domain` and `*-types` `Cargo.toml` must never list `sqlx`, `tokio`, `axum`, or any I/O crate
+- No `async fn` anywhere in `*-domain/src/`
+- `decide()` and `evolve()` contain no logging, no I/O, no clock reads, no randomness
+- `evolve()` handles every event variant exhaustively — no `unreachable!()`
+- `fold()` delegates to `evolve()` — it never duplicates match logic
+
+### ES Layer Tags
+
+| Tag | Crate Suffix | Role |
+|-----|-------------|------|
+| `es:types` | `*-types` | Aggregate trait, commands, events, state, errors, envelopes |
+| `es:domain` | `*-domain` | `decide` + `evolve` + `fold` — **functional core** |
+| `es:store` | `*-store` | EventStore trait + append-only SQL implementation |
+| `es:service` | `*-service` | CommandHandler — load→fold→decide→append orchestration |
+| `es:projection` | (in `-service`) | Read model projections over the event stream |
+| `es:api` | `*-api` | HTTP command + query endpoints |
+
+### CRUD vs Event Sourcing
+
+| | CRUD (`/ral:scaffold`) | Event Sourcing (`/ral:es-scaffold`) |
+|--|------------------------|-------------------------------------|
+| Persistence | Current state row | Append-only event stream |
+| Business logic | Service layer (imperative) | `decide()` (pure function) |
+| History | Optional audit log | Intrinsic — events ARE the record |
+| Testing | Requires DB or mock | Pure unit tests via GWT harness |
+| Complexity | Lower | Higher — use for complex domains |
+
 ## Agent Categories
 
-### Planning Agents (9)
+### Planning Agents (10)
 Transform ADRs into structured implementation stories.
 
 - `adr-structure-validator` — validates ADR completeness and structure
@@ -116,6 +184,7 @@ Transform ADRs into structured implementation stories.
 - `story-generator` — generates Linear-ready stories with crate-layer tags
 - `dependency-linker` — creates blocks/blocked-by relationships
 - `rust-architect` — designs crate boundaries and trait composition
+- `es-aggregate-architect` — designs Event Sourcing aggregate vocabulary, FCIS layout, projections, and saga need
 - `crate-dependency-analyzer` — validates dependency direction and detects cycles
 - `schema-ripple-analyzer` — maps impact of data model changes across crates
 - `test-strategy-planner` — plans unit/integration/property/doc test coverage
@@ -128,7 +197,7 @@ Validate plans before implementation begins.
 - `workspace-impact-reviewer` — identifies all affected crates and semver impact
 - `trait-design-planner` — validates trait interfaces for correctness and DI fitness
 
-### Code Review Agents (12)
+### Code Review Agents (13)
 Specialized reviewers run in parallel on every PR.
 
 - `ownership-borrow-reviewer` — lifetime correctness, unnecessary clones, borrow patterns
@@ -143,6 +212,7 @@ Specialized reviewers run in parallel on every PR.
 - `pattern-recognition-specialist` — anti-patterns, naming, idiomatic Rust
 - `test-coverage-reviewer` — 100% coverage, proper test isolation
 - `api-design-reviewer` — public API ergonomics, documentation, semver
+- `es-invariant-reviewer` — FCIS boundary, decide/evolve purity, event schema safety, optimistic concurrency
 
 ### Compound Agents (3)
 Capture learnings after completing implementation.
