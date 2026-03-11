@@ -1,0 +1,69 @@
+{
+  "name": "rust-assembly-line",
+  "displayName": "Rust Assembly Line",
+  "version": "0.1.0",
+  "description": "A Rust-focused software assembly line that orchestrates multi-agent workflows to prepare Architecture Decision Records (ADRs), plan implementation stories, enforce code quality, and capture learnings — all tuned for Rust workspace projects.",
+  "author": "adversarial.systems",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/imaginary-systems/rust-assembly-line.git"
+  },
+  "homepage": "https://github.com/imaginary-systems/rust-assembly-line",
+  "keywords": [
+    "rust",
+    "architecture",
+    "adr",
+    "code-review",
+    "event-sourcing",
+    "openapi",
+    "multi-agent",
+    "quality-gates",
+    "planning",
+    "scaffolding"
+  ],
+  "categories": [
+    "Architecture",
+    "Code Quality",
+    "Planning",
+    "Testing",
+    "Documentation"
+  ],
+  "icon": "⚙️",
+  "readme": "README.md",
+  "changelog": "CLAUDE.md",
+  "minClaudeVersion": "1.0.0",
+  "features": [
+    "Architecture Decision Records (ADR) authoring and validation",
+    "Multi-agent code review with 14 specialized reviewers",
+    "Event Sourcing scaffolding with Fold→Decide→Evolve pattern",
+    "CRUD scaffolding across Rust crate layers",
+    "OpenAPI schema management with Scalar UI",
+    "Linear issue generation with dependency tracking",
+    "Rust quality standards enforcement (no unwrap, typed errors, 100% coverage)",
+    "WASM frontend recommendations (Leptos, Dioxus)",
+    "Learning capture and pattern documentation"
+  ],
+  "tags": [
+    "rust",
+    "architecture-decisions",
+    "code-review",
+    "event-sourcing",
+    "fcis",
+    "openapi",
+    "scalar",
+    "multi-agent",
+    "quality-assurance",
+    "clippy",
+    "testing",
+    "wasm"
+  ],
+  "screenshots": [],
+  "documentation": {
+    "gettingStarted": "README.md",
+    "fullDocumentation": "CLAUDE.md"
+  },
+  "support": {
+    "issues": "https://github.com/imaginary-systems/rust-assembly-line/issues"
+  }
+}
