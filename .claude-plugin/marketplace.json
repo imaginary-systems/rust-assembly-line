@@ -17,7 +17,10 @@
   "plugins": [
     {
       "name": "rust-assembly-line",
-      "source": "https://github.com/imaginary-systems/rust-assembly-line.git"
+      "source": {
+        "source": "github",
+        "repo": "imaginary-systems/rust-assembly-line"
+      }
     }
   ],
   "keywords": [
