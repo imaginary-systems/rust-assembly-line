@@ -17,7 +17,7 @@
   "plugins": [
     {
       "name": "rust-assembly-line",
-      "path": ".claude-plugin/plugin.json"
+      "source": "https://github.com/imaginary-systems/rust-assembly-line.git"
     }
   ],
   "keywords": [
