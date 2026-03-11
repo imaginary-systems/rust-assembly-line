@@ -5,11 +5,21 @@
   "description": "A Rust-focused software assembly line that orchestrates multi-agent workflows to prepare Architecture Decision Records (ADRs), plan implementation stories, enforce code quality, and capture learnings — all tuned for Rust workspace projects.",
   "author": "adversarial.systems",
   "license": "MIT",
+  "owner": {
+    "name": "adversarial.systems",
+    "url": "https://github.com/imaginary-systems"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/imaginary-systems/rust-assembly-line.git"
   },
   "homepage": "https://github.com/imaginary-systems/rust-assembly-line",
+  "plugins": [
+    {
+      "name": "rust-assembly-line",
+      "path": ".claude-plugin/plugin.json"
+    }
+  ],
   "keywords": [
     "rust",
     "architecture",
