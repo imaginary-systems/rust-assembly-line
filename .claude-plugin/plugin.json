@@ -2,6 +2,5 @@
   "name": "rust-assembly-line",
   "version": "0.1.0",
   "description": "A Rust software assembly line: ADR authoring, planning, implementation, and quality gates for Rust workspace projects.",
-  "commands": "./commands/",
-  "agents": "./agents/"
+  "commands": "./commands/"
 }
