@@ -12,7 +12,7 @@ Rust Assembly Line is an opinionated development framework that enforces best pr
 
 ```bash
 # Clone the repository
-git clone https://github.com/adversarial-systems/rust-assembly-line.git
+git clone https://github.com/imaginary-systems/rust-assembly-line.git
 
 # Run setup to install hooks and quality gates
 /ral:setup
@@ -315,7 +315,7 @@ For complete documentation, see [CLAUDE.md](CLAUDE.md).
 
 ## Contributing
 
-This project enforces strict quality standards. All contributions must:
+This project enforces strict quality standards. All contributions must continue to assert through the markdown directives that:
 
 - Pass `cargo clippy -- -D warnings` with zero warnings
 - Pass `cargo fmt --check`
@@ -325,4 +325,4 @@ This project enforces strict quality standards. All contributions must:
 
 ---
 
-**Built for teams that take Rust seriously.**
+**Built for teams that build Rust Agentically.**
