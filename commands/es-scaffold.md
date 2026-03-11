@@ -76,7 +76,9 @@ Scaffolds with placeholder commands, events, and state that the author fills in.
   --projections "OrderSummary { id: OrderId, status: OrderStatus, total: Decimal }" \
   --crate-prefix order \
   --versioning optimistic \
-  --snapshot 500
+  --snapshot 500 \
+  --with-openapi \
+  --with-wasm-client
 ```
 
 ### Options
@@ -94,6 +96,8 @@ Scaffolds with placeholder commands, events, and state that the author fills in.
 | `--snapshot` | integer | disabled | Generate snapshot support every N events |
 | `--skip` | layer list | none | Skip: `domain`, `store`, `service`, `projection`, `api` |
 | `--with-saga` | flag | false | Generate a saga/process manager crate |
+| `--with-openapi` | flag | false | Annotate command/query handlers with `utoipa`, generate `ApiDoc`, wire Scalar UI at `/scalar` |
+| `--with-wasm-client` | flag | false | Generate `<prefix>-client` crate via `progenitor` (requires `--with-openapi`); WASM-compatible |
 
 ## Generated Crate Layers
 
@@ -566,6 +570,33 @@ Files created (31):
   order-api/src/{router,handlers/commands,handlers/queries}.rs
   order-api/src/dto/{requests,responses}.rs
 
+# With --with-openapi (3 additional files):
+  order-api/src/openapi.rs           — ApiDoc struct (command paths + query paths + all DTOs)
+  order-api/src/dto/requests.rs      — PlaceOrderRequest, CancelOrderRequest, ShipOrderRequest (ToSchema + examples)
+  order-api/src/dto/responses.rs     — EventEnvelopeResponse, OrderSummaryResponse, ErrorResponse (ToSchema)
+
+  Scalar UI:  http://localhost:3000/scalar
+  Spec JSON:  http://localhost:3000/openapi.json
+
+  OpenAPI route map:
+    POST   /orders/:id/commands/place    → PlaceOrder (documented: 202, 409, 422, 401)
+    POST   /orders/:id/commands/cancel   → CancelOrder (documented: 202, 404, 409, 401)
+    POST   /orders/:id/commands/ship     → ShipOrder (documented: 202, 404, 409, 401)
+    GET    /orders/:id                   → current state via fold (documented: 200, 404, 401)
+    GET    /orders/:id/events            → raw event stream (documented: 200, 404, 401)
+    GET    /orders/:id/summary           → OrderSummary projection (documented: 200, 404, 401)
+
+  Note: ES command endpoints return 202 Accepted (not 201) — the command was accepted
+  and events were persisted, but the response is the envelope, not the new state.
+
+# With --with-wasm-client (2 additional files, requires --with-openapi):
+  order-client/Cargo.toml             — progenitor-client, reqwest (wasm32 + native features)
+  order-client/build.rs               — regenerates src/generated.rs from docs/openapi.json
+
+  Client usage in Leptos/Dioxus:
+    let client = order_client::Client::new("https://api.example.com");
+    let envelope = client.place_order(&order_id, &PlaceOrderRequest { ... }).await?;
+
 FCIS boundary enforced:
   Functional core:  order-types, order-domain  (no I/O, no async runtime deps)
   Imperative shell: order-store, order-service, order-api
@@ -576,6 +607,8 @@ Next steps:
   3. Fill in decide() invariants in order-domain/src/invariants.rs
   4. Fill in evolve() state transitions in order-domain/src/aggregate.rs
   5. Add failing GWT tests first, then make them pass (TDD from the core out)
+  6. Run /ral:openapi validate       — verify all handlers are annotated
+  7. Open http://localhost:3000/scalar — explore and test the API
 ```
 
 ## FCIS Rules Enforced by the `es-invariant-reviewer` Agent

@@ -111,6 +111,30 @@ summary:
   verdict: blocked
 ```
 
+### OpenAPI / utoipa Annotation Completeness
+
+When `*-api` crates are in scope, also check for OpenAPI annotation hygiene. For full coverage run `openapi-compliance-reviewer` separately; here flag only the most visible gaps.
+
+**ERROR: Handler routed but has no `#[utoipa::path]`**
+
+Check `router.rs` route registrations against annotations in handler files. Any routed function without `#[utoipa::path]` is invisible in Scalar.
+
+**ERROR: DTO struct missing `#[derive(ToSchema)]`**
+
+Any struct named in a `request_body = ...` or `body = ...` inside `#[utoipa::path]` that does not derive `ToSchema` will break the spec compilation or produce an empty `{}` schema.
+
+**WARNING: No `#[schema(example = ...)]` on request DTO fields**
+
+Without examples the Scalar playground is blank, making the UI useless for testing. Every field a user fills in must have an example value.
+
+**WARNING: `ApiDoc` struct not updated after adding a new handler**
+
+When a new handler and its DTO are added but `ApiDoc`'s `paths(...)` and `components(schemas(...))` lists are not updated, the new endpoint is absent from the Scalar UI entirely. Check that `ApiDoc` reflects the full route surface.
+
+**WARNING: Scalar UI not wired in router**
+
+If `utoipa-scalar` is a dependency but no `.merge(Scalar::with_url(...))` call exists in `router.rs`, the Scalar UI is never served. Also verify a `/openapi.json` route exists for tooling.
+
 ## Tools
 - Read
 - Grep

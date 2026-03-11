@@ -39,6 +39,11 @@
       "path": "commands/es-scaffold.md"
     },
     {
+      "name": "openapi",
+      "description": "Manage the OpenAPI schema lifecycle: validate annotation coverage, serve Scalar UI, export spec, and generate typed Rust or TypeScript clients",
+      "path": "commands/openapi.md"
+    },
+    {
       "name": "setup",
       "description": "Install rust-assembly-line hooks and quality gates into the current project",
       "path": "commands/setup.md"
@@ -60,6 +65,14 @@
     {
       "name": "planning:es-aggregate-architect",
       "path": "agents/planning/es-aggregate-architect.md"
+    },
+    {
+      "name": "planning:openapi-schema-designer",
+      "path": "agents/planning/openapi-schema-designer.md"
+    },
+    {
+      "name": "planning:wasm-ui-advisor",
+      "path": "agents/planning/wasm-ui-advisor.md"
     },
     {
       "name": "planning:story-generator",
@@ -152,6 +165,10 @@
     {
       "name": "code-review:es-invariant-reviewer",
       "path": "agents/code-review/es-invariant-reviewer.md"
+    },
+    {
+      "name": "code-review:openapi-compliance-reviewer",
+      "path": "agents/code-review/openapi-compliance-reviewer.md"
     },
     {
       "name": "compound:rust-pattern-documenter",

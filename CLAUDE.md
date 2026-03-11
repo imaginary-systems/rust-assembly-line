@@ -13,6 +13,7 @@ A Rust-focused software assembly line that orchestrates multi-agent workflows to
 | `/ral:compound` | Capture learnings and update project documentation |
 | `/ral:scaffold` | Generate CRUD scaffold across Rust crate layers |
 | `/ral:es-scaffold` | Generate an Event Sourcing scaffold with domain aggregate, fold→decide→evolve, and FCIS architecture |
+| `/ral:openapi` | Validate annotations, serve Scalar UI, export spec, generate typed clients |
 | `/ral:setup` | Install hooks and quality gates |
 
 ## Rust Quality Standards
@@ -175,7 +176,67 @@ state + event ──► evolve(state, event) ──────────► S
 
 ## Agent Categories
 
-### Planning Agents (10)
+## OpenAPI, Scalar UI, and WASM Frontends
+
+### OpenAPI Toolchain
+
+All HTTP API crates use `utoipa` for schema annotation. The toolchain is opinionated:
+
+| Role | Crate | Used In |
+|------|-------|---------|
+| Schema derivation | `utoipa` (`#[derive(ToSchema)]`) | DTOs in `*-api` |
+| Handler annotation | `utoipa-axum` (`#[utoipa::path]`) | Handlers in `*-api` |
+| Spec assembly | `utoipa::OpenApi` (`ApiDoc` struct) | `*-api/src/openapi.rs` |
+| Scalar UI | `utoipa-scalar` (served at `/scalar`) | `*-api/src/router.rs` |
+| Rust client gen | `progenitor` (from `openapi.json`) | `*-client` crate |
+| TS type gen | `openapi-typescript` | Hybrid JS frontends |
+
+**Non-negotiable OpenAPI rules** (enforced by `openapi-compliance-reviewer`):
+- Every routed `pub async fn` handler has `#[utoipa::path]`
+- Every DTO used as `request_body` or `body` derives `ToSchema`
+- Every DTO field has at least one `#[schema(example = ...)]` for Scalar playground usability
+- `ApiDoc` lists all paths and all schemas — nothing is silently omitted
+- Scalar mounted at `/scalar`; raw spec at `/openapi.json`
+- ES command endpoints return `202 Accepted`, not `201 Created`
+
+### Scalar UI
+
+Scalar is the interactive API testing UI, served directly from the Axum process. It replaces Swagger UI with a modern interface that supports authentication, code snippet generation, and a full request playground.
+
+```
+Dev:        http://localhost:3000/scalar
+Spec:       http://localhost:3000/openapi.json
+CI export:  cargo run -p <prefix>-api --features export-spec -- export-spec > docs/openapi.json
+Validate:   npx @scalar/cli validate docs/openapi.json
+```
+
+Scalar is gated in production (`cfg(debug_assertions)` or `SERVE_DOCS=true`). For public APIs, serve it unconditionally.
+
+### WASM Frontend Recommendations
+
+Three framework profiles, chosen by project context:
+
+| Profile | Framework | When to choose |
+|---------|-----------|---------------|
+| Full-stack Rust + SSR | **Leptos** + `leptos_axum` | Axum backend, SEO needed, team is Rust-first; server functions share `*-types` directly — no REST client |
+| Standalone WASM SPA | **Leptos** or **Dioxus** + `progenitor` | Single-page app consuming REST API; `progenitor` generates a WASM-compatible typed Rust client from `openapi.json` |
+| Cross-platform | **Dioxus** | Same codebase targets web (WASM), desktop, and mobile via feature flags |
+
+**Build toolchain:** `trunk` for Leptos/Yew; `dx` (dioxus-cli) for Dioxus.
+
+**WASM optimisation** (always in release):
+```toml
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+```
+
+**`wasm-ui-advisor` agent** produces a complete architecture recommendation — framework choice with rationale, component structure, client strategy, Trunk/dioxus-cli config, CORS requirements, and WASM size optimisation settings.
+
+## Agent Categories
+
+### Planning Agents (12)
 Transform ADRs into structured implementation stories.
 
 - `adr-structure-validator` — validates ADR completeness and structure
@@ -185,6 +246,8 @@ Transform ADRs into structured implementation stories.
 - `dependency-linker` — creates blocks/blocked-by relationships
 - `rust-architect` — designs crate boundaries and trait composition
 - `es-aggregate-architect` — designs Event Sourcing aggregate vocabulary, FCIS layout, projections, and saga need
+- `openapi-schema-designer` — designs `utoipa` annotation strategy, DTO shapes, Scalar config, and client generation plan for an ADR's API surface
+- `wasm-ui-advisor` — recommends WASM framework (Leptos/Dioxus/Yew), component architecture, client strategy, build toolchain, and CORS config
 - `crate-dependency-analyzer` — validates dependency direction and detects cycles
 - `schema-ripple-analyzer` — maps impact of data model changes across crates
 - `test-strategy-planner` — plans unit/integration/property/doc test coverage
@@ -197,7 +260,7 @@ Validate plans before implementation begins.
 - `workspace-impact-reviewer` — identifies all affected crates and semver impact
 - `trait-design-planner` — validates trait interfaces for correctness and DI fitness
 
-### Code Review Agents (13)
+### Code Review Agents (14)
 Specialized reviewers run in parallel on every PR.
 
 - `ownership-borrow-reviewer` — lifetime correctness, unnecessary clones, borrow patterns
@@ -213,6 +276,7 @@ Specialized reviewers run in parallel on every PR.
 - `test-coverage-reviewer` — 100% coverage, proper test isolation
 - `api-design-reviewer` — public API ergonomics, documentation, semver
 - `es-invariant-reviewer` — FCIS boundary, decide/evolve purity, event schema safety, optimistic concurrency
+- `openapi-compliance-reviewer` — `utoipa` annotation coverage, `ToSchema` on all DTOs, `ApiDoc` completeness, Scalar wiring, example fields
 
 ### Compound Agents (3)
 Capture learnings after completing implementation.
