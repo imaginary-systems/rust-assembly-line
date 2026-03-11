@@ -1,5 +1,5 @@
 {
-  "name": "rust-assembly-line",
+  "name": "ral",
   "displayName": "Rust Assembly Line",
   "version": "0.1.0",
   "description": "A Rust-focused software assembly line that orchestrates multi-agent workflows to prepare Architecture Decision Records (ADRs), plan implementation stories, enforce code quality, and capture learnings — all tuned for Rust workspace projects.",
@@ -16,7 +16,7 @@
   "homepage": "https://github.com/imaginary-systems/rust-assembly-line",
   "plugins": [
     {
-      "name": "rust-assembly-line",
+      "name": "ral",
       "source": {
         "source": "github",
         "repo": "imaginary-systems/rust-assembly-line"

@@ -1,5 +1,5 @@
 {
-  "name": "rust-assembly-line",
+  "name": "ral",
   "version": "0.1.0",
   "description": "A Rust software assembly line: ADR authoring, planning, implementation, and quality gates for Rust workspace projects.",
   "commands": "./commands/"
